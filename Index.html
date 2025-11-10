@@ -1,0 +1,227 @@
+import React, { useState, useEffect } from 'react';
+import { Search, Package, DollarSign, Archive } from 'lucide-react';
+
+export default function InventorySystem() {
+  const [items, setItems] = useState([]);
+  const [formData, setFormData] = useState({
+    nama: '',
+    stok: '',
+    harga: ''
+  });
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Perhitungan statistik
+  const totalBarang = items.length;
+  const totalStok = items.reduce((sum, item) => sum + item.stok, 0);
+  const nilaiInventaris = items.reduce((sum, item) => sum + (item.stok * item.harga), 0);
+
+  // Filter barang berdasarkan pencarian
+  const filteredItems = items.filter(item =>
+    item.nama.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Handle input form
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Tambah barang baru
+  const handleAddItem = () => {
+    if (!formData.nama || !formData.stok || !formData.harga) {
+      alert('Mohon isi semua field!');
+      return;
+    }
+
+    const newItem = {
+      id: Date.now(),
+      nama: formData.nama,
+      stok: parseInt(formData.stok),
+      harga: parseFloat(formData.harga)
+    };
+
+    setItems(prev => [...prev, newItem]);
+    setFormData({ nama: '', stok: '', harga: '' });
+  };
+
+  // Hapus barang
+  const handleDeleteItem = (id) => {
+    if (confirm('Yakin ingin menghapus barang ini?')) {
+      setItems(prev => prev.filter(item => item.id !== id));
+    }
+  };
+
+  // Format rupiah
+  const formatRupiah = (angka) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0
+    }).format(angka);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-4xl font-bold text-indigo-900 mb-8 text-center">
+          Sistem Pengelolaan Inventaris
+        </h1>
+
+        {/* Statistik */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm">Total Barang</p>
+                <p className="text-3xl font-bold text-blue-600">{totalBarang}</p>
+              </div>
+              <Package className="text-blue-500" size={40} />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm">Total Stok</p>
+                <p className="text-3xl font-bold text-green-600">{totalStok}</p>
+              </div>
+              <Archive className="text-green-500" size={40} />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm">Nilai Inventaris</p>
+                <p className="text-2xl font-bold text-purple-600">{formatRupiah(nilaiInventaris)}</p>
+              </div>
+              <DollarSign className="text-purple-500" size={40} />
+            </div>
+          </div>
+        </div>
+
+        {/* Form Tambah Barang */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Tambah Barang Baru</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nama Barang
+              </label>
+              <input
+                type="text"
+                name="nama"
+                value={formData.nama}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Masukkan nama barang"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Stok
+              </label>
+              <input
+                type="number"
+                name="stok"
+                value={formData.stok}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Jumlah stok"
+                min="0"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Harga (Rp)
+              </label>
+              <input
+                type="number"
+                name="harga"
+                value={formData.harga}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Harga satuan"
+                min="0"
+              />
+            </div>
+
+            <div className="flex items-end">
+              <button
+                onClick={handleAddItem}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+              >
+                Tambah Barang
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Search dan Tabel */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Cari barang..."
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-indigo-600 text-white">
+                  <th className="px-6 py-3 text-left text-sm font-semibold">No</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold">Nama Barang</th>
+                  <th className="px-6 py-3 text-center text-sm font-semibold">Stok</th>
+                  <th className="px-6 py-3 text-right text-sm font-semibold">Harga Satuan</th>
+                  <th className="px-6 py-3 text-right text-sm font-semibold">Total Nilai</th>
+                  <th className="px-6 py-3 text-center text-sm font-semibold">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                      {searchTerm ? 'Barang tidak ditemukan' : 'Belum ada barang dalam inventaris'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredItems.map((item, index) => (
+                    <tr key={item.id} className="border-b hover:bg-gray-50 transition">
+                      <td className="px-6 py-4 text-sm text-gray-700">{index + 1}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.nama}</td>
+                      <td className="px-6 py-4 text-sm text-center text-gray-700">{item.stok}</td>
+                      <td className="px-6 py-4 text-sm text-right text-gray-700">{formatRupiah(item.harga)}</td>
+                      <td className="px-6 py-4 text-sm text-right font-semibold text-indigo-600">
+                        {formatRupiah(item.stok * item.harga)}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button
+                          onClick={() => handleDeleteItem(item.id)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded text-sm transition duration-200"
+                        >
+                          Hapus
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
